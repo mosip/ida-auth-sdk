@@ -1,0 +1,10 @@
+samples
+__pycache__
+.vscode
+helm
+.venv
+certs
+stored_files
+**/*.log
+**/*.db
+**/*.dbsqlite

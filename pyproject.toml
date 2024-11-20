@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "mosip-auth-sdk"
 version = "0.1.0"
-description = "Clean Wrapper for Mosip Authentication APIs"
+description = "Simplified SDK for MOSIP Authentication"
 authors = ["Abdul Bathish"]
 license = "Mozilla Public License Version 2.0"
 readme = "README.md"
@@ -9,11 +9,13 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 pydantic = "^2.9.2"
-dynaconf = "^3.2.6"
 requests = "^2.32.3"
 cryptography = "^43.0.3"
 jwcrypto = "^1.5.6"
 
+
+[tool.poetry.group.dev.dependencies]
+dynaconf = "^3.2.6"
 
 [build-system]
 requires = ["poetry-core"]

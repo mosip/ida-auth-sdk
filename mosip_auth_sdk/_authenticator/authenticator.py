@@ -5,12 +5,12 @@ import sys
 import traceback
 import urllib
 from datetime import datetime
-from typing import Literal, Optional, Dict
+from typing import Literal, Optional, Dict, TypeAlias
 from .model import MOSIPAuthRequest, DemographicsModel, MOSIPEncryptAuthRequest
 from .utils import CryptoUtility, RestUtility
 from .exceptions import AuthenticatorException, Errors
 
-type AuthController = Literal['kyc', 'auth']
+AuthController: TypeAlias = Literal['kyc', 'auth']
 
 class MOSIPAuthenticator:
     """

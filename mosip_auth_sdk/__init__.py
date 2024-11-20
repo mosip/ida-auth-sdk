@@ -1,6 +1,8 @@
 import logging
 import sys
 
+from mosip_auth_sdk._authenticator import MOSIPAuthenticator
+
 def init_logger(config):
     logger = logging.getLogger()
     logger.setLevel(getattr(logging,config.logging.loglevel))

@@ -44,7 +44,7 @@ class MOSIPAuthRequest(BaseModel):
     request: str
     metadata: dict
 
-class BiometricModelDigitalId(BaseModel):
+class BiometricModelDataDigitalIdField(BaseModel):
     serialNo: str
     make: str
     model: str
@@ -56,8 +56,8 @@ class BiometricModelDigitalId(BaseModel):
     deviceProviderId: str
     dateTime: str
 
-class BiometricModelData(BaseModel):
-    digitalId: DigitalId
+class BiometricModelDataField(BaseModel):
+    digitalId: BiometricModelDataDigitalIdField
     bioType: str
     bioSubType: str
     bioValue: str
@@ -73,7 +73,7 @@ class BiometricModelData(BaseModel):
     qualityScore: int
 
 class BiometricModel(BaseModel):
-    data: BiometricModelData
+    data: BiometricModelDataField
     hash: str
     sessionKey: str
     specVersion: str

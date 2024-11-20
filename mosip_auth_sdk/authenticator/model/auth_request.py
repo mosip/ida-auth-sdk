@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 class MOSIPRequestedAuth(BaseModel):
     demo : bool = False
@@ -20,15 +20,17 @@ class DemographicsModel(BaseModel):
     fullAddress : List[DemographicLanguageField]
 
 class MOSIPEncryptAuthRequest(BaseModel):
-    timestamp : str
-    demographics : dict
     biometrics : list
+    demographics : dict
+    otp : str
+    timestamp : str
+
 
 class MOSIPAuthRequest(BaseModel):
     id : str
     version : str
     individualId: str
-    #individualIdType: str = 'VID'
+    individualIdType: str
     transactionID: str
     requestTime: str
     specVersion: str

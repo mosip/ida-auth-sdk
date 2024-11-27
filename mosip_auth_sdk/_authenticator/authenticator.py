@@ -68,7 +68,11 @@ class MOSIPAuthenticator:
         '''
         self._validate_config(config)
         if not logger:
-            self.logger = self._init_logger(config.logging.log_file_path)
+            self.logger = self._init_logger(
+                file_path=config.logging.log_file_path,
+                level=config.logging.loglevel or logging.INFO,
+                format=config.logging.log_format,
+            )
         else:
             self.logger = logger
 
@@ -98,12 +102,16 @@ class MOSIPAuthenticator:
             raise KeyError("Config should have 'ida_auth_domain_uri' set under [mosip_auth_server] section")
 
     @staticmethod
-    def _init_logger(filename):
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        fileHandler = logging.FileHandler(filename)
+    def _init_logger(
+            *,
+            file_path,
+            format,
+            level):
+        logger = logging.getLogger(file_path)
+        logger.setLevel(level)
+        fileHandler = logging.FileHandler(file_path)
         streamHandler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(format)
         streamHandler.setFormatter(formatter)
         fileHandler.setFormatter(formatter)
         logger.addHandler(streamHandler)

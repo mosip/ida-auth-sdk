@@ -4,4 +4,5 @@ from .auth_request import (
     DemographicsModel,
     MOSIPEncryptAuthRequest,
     MOSIPAuthRequest,
+    BiometricModel,
 )

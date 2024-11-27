@@ -21,7 +21,7 @@ class DemographicsModel(BaseModel):
 
 class MOSIPEncryptAuthRequest(BaseModel):
     biometrics : list
-    demographics : dict
+    demographics : DemographicsModel
     otp : str
     timestamp : str
 

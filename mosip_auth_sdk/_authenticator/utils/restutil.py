@@ -36,6 +36,7 @@ class RestUtility:
             self.request_headers.update(additional_headers)
 
         self.logger.info('Got <POST> Request for URL: {}'.format(self.auth_server_url))
+        self.logger.debug(f'Final request route = {server_url}')
         return requests.post(
             server_url,
             headers = self.request_headers,

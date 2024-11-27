@@ -5,8 +5,8 @@ import sys
 import traceback
 import urllib
 from datetime import datetime
-from typing import Literal, Optional, Dict, TypeAlias
-from .model import MOSIPAuthRequest, DemographicsModel, MOSIPEncryptAuthRequest
+from typing import Literal, Optional, Dict, TypeAlias, List
+from .model import MOSIPAuthRequest, DemographicsModel, MOSIPEncryptAuthRequest, BiometricModel
 from .utils import CryptoUtility, RestUtility
 from .exceptions import AuthenticatorException, Errors
 
@@ -14,7 +14,7 @@ AuthController: TypeAlias = Literal['kyc', 'auth']
 
 class MOSIPAuthenticator:
     """
-Wrapper for the Mosip Authentication Service.
+    Wrapper for the Mosip Authentication Service.
 
     MOSIP provides two authentication controllers:
     1. kyc-auth-controller:
@@ -45,7 +45,7 @@ Wrapper for the Mosip Authentication Service.
 
     authenticator = MOSIPAuthenticator(config={
         # Your configuration settings go here.
-        # Refer to authenticator-config.toml for the required values.
+        # Refer to tests/authenticator-config.toml for the required values.
     })
 
     # Refer the DemographicsModel, BiometricModel documentation to know
@@ -61,11 +61,12 @@ Wrapper for the Mosip Authentication Service.
         biometrics=biometrics,  # Optional
     )
     ```
-
-    Attributes:
-        config (dict): Configuration settings for the authenticator.
     """
-    def __init__(self, **, config, logger=None):
+
+    def __init__(self, *, config, logger=None):
+        '''
+        '''
+        self._validate_config(config)
         if not logger:
             self.logger = self._init_logger(config.logging.log_file_path)
         else:
@@ -90,6 +91,13 @@ Wrapper for the Mosip Authentication Service.
         self.authorization_header_constant = config.mosip_auth.authorization_header_constant
 
     @staticmethod
+    def _validate_config(config):
+        if not config.mosip_auth_server.ida_auth_url:
+            raise KeyError("Config should have 'ida_auth_url' set under [mosip_auth_server] section")
+        if not config.mosip_auth_server.ida_auth_domain_uri:
+            raise KeyError("Config should have 'ida_auth_domain_uri' set under [mosip_auth_server] section")
+
+    @staticmethod
     def _init_logger(filename):
         logger = logging.getLogger()
         logger.setLevel(logging.INFO)
@@ -100,11 +108,11 @@ Wrapper for the Mosip Authentication Service.
         fileHandler.setFormatter(formatter)
         logger.addHandler(streamHandler)
         logger.addHandler(fileHandler)
-        return
+        return logger
 
-    def _get_default_auth_request(self, controller: AuthControllerWay, **, timestamp=None, individual_id='', txn_id=''):
+    def _get_default_auth_request(self, controller: AuthController, *, timestamp=None, individual_id='', txn_id=''):
         _timestamp = timestamp or datetime.utcnow()
-        timestamp_str = _timestamp.strftime(self.timestamp_format) + timestamp.strftime('.%f')[0:4] + 'Z'
+        timestamp_str = _timestamp.strftime(self.timestamp_format) + _timestamp.strftime('.%f')[0:4] + 'Z'
         transaction_id = txn_id or ''.join([secrets.choice(string.digits) for _ in range(10)])
         id = self.ida_auth_request_id_by_controller.get(controller, '')
         if not id:
@@ -132,25 +140,25 @@ Wrapper for the Mosip Authentication Service.
             requestHMAC = '',
         )
 
-    def kyc(self, **,
+    def kyc(self, *,
             vid,
             demographic_data: DemographicsModel,
-            otp_value: Optional[str]=None,
-            biometrics: Optional[List[BiometricModel]]=None
+            otp_value: Optional[str]='',
+            biometrics: Optional[List[BiometricModel]]=[]
             ):
         return self.__authenticate(
-            controller='kyc'
+            controller='kyc',
             vid=vid,
             demographic_data=demographic_data,
             otp_value=otp_value,
             biometrics=biometrics
         )
 
-    def auth(self, **,
+    def auth(self, *,
             vid,
             demographic_data: DemographicsModel,
-            otp_value: Optional[str]=None,
-            biometrics: Optional[List[BiometricModel]]=None
+            otp_value: Optional[str]='',
+            biometrics: Optional[List[BiometricModel]]=[]
             ):
         return self.__authenticate(
             controller='',
@@ -162,11 +170,11 @@ Wrapper for the Mosip Authentication Service.
 
     def __authenticate(
             self,
-            **,
+            *,
             controller: AuthController,
             vid: str,
             demographic_data: DemographicsModel,
-            otp_value: Optional[str]=None,
+            otp_value: Optional[str]='',
             biometrics: Optional[List[BiometricModel]]=[]
     ):
         '''
@@ -181,12 +189,15 @@ Wrapper for the Mosip Authentication Service.
         auth_request.requestedAuth.bio = bool(biometrics)
         request = MOSIPEncryptAuthRequest(
             timestamp = auth_request.requestTime,
-            biometrics = biometrics,
+            biometrics = biometrics or [],
             demographics = demographic_data,
-            otp = ,
+            otp = otp_value,
+        )
+        self.logger.debug(
+            "Sending auth request",
+            request
         )
         try:
-            signature_header = {'Signature': self.crypto_util.sign_auth_request_data(full_request_json)}
             auth_request.request, auth_request.requestSessionKey, auth_request.requestHMAC = \
                 self.crypto_util.encrypt_auth_data(request.json())
             path_params = '/'.join(
@@ -196,6 +207,7 @@ Wrapper for the Mosip Authentication Service.
                 )
             )
             full_request_json = auth_request.json()
+            signature_header = {'Signature': self.crypto_util.sign_auth_request_data(full_request_json)}
             response = self.auth_rest_util.post_request(path_params=path_params, data=full_request_json, additional_headers=signature_header)
             self.logger.info('Auth Request for Demographic Completed.')
             return response

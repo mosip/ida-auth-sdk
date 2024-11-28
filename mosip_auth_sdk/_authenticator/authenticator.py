@@ -76,7 +76,7 @@ class MOSIPAuthenticator:
         else:
             self.logger = logger
 
-        self.auth_rest_util = RestUtility(config.mosip_auth_server.ida_auth_url, config.mosip_auth.authorization_header_constant)
+        self.auth_rest_util = RestUtility(config.mosip_auth_server.ida_auth_url, config.mosip_auth.authorization_header_constant, logger=self.logger)
         self.crypto_util = CryptoUtility(config.crypto_encrypt, config.crypto_signature)
 
         self.auth_domain_scheme = config.mosip_auth_server.ida_auth_domain_uri
@@ -131,21 +131,24 @@ class MOSIPAuthenticator:
             self.logger.error('Received Auth Request for demographic.')
             raise AuthenticatorException(Errors.AUT_CRY_005.name, err_msg)
         return MOSIPAuthRequest(
+            ## BaseRequestDto(https://github.com/mosip/id-authentication/blob/d879209bc9e7c5aa7a84151372c450749fca5edf/authentication/authentication-core/src/main/java/io/mosip/authentication/core/indauth/dto/BaseRequestDTO.java#L13)
             id = id,
             version = self.ida_auth_version,
-            env = self.ida_auth_env,
-            domainUri = self.auth_domain_scheme,
-            specVersion = self.ida_auth_version,
-            consentObtained = consent_obtained,
-            metadata = {},
-            thumbprint = self.crypto_util.enc_cert_thumbprint,
             individualId = individual_id,
             individualIdType = 'VID',
             transactionID = transaction_id,
             requestTime = timestamp_str,
+            ## BaseAuthRequestDto
+            specVersion = self.ida_auth_version,
+            thumbprint = self.crypto_util.enc_cert_thumbprint,
+            domainUri = self.auth_domain_scheme,
+            env = self.ida_auth_env,
+            ## AuthRequestDto
             request = '',
-            requestSessionKey = '',
+            consentObtained = consent_obtained,
             requestHMAC = '',
+            requestSessionKey = '',
+            metadata = {},
         )
 
     def kyc(self, *,
@@ -198,9 +201,9 @@ class MOSIPAuthenticator:
             individual_id=vid,
             consent_obtained=consent_obtained,
         )
-        auth_request.requestedAuth.demo = True
-        auth_request.requestedAuth.otp = bool(otp_value)
-        auth_request.requestedAuth.bio = bool(biometrics)
+        # auth_request.requestedAuth.demo = True
+        # auth_request.requestedAuth.otp = bool(otp_value)
+        # auth_request.requestedAuth.bio = bool(biometrics)
         request = MOSIPEncryptAuthRequest(
             timestamp = auth_request.requestTime,
             biometrics = biometrics or [],

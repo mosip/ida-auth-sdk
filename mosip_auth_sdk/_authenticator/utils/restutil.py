@@ -3,13 +3,13 @@ import os
 import requests
 
 class RestUtility:
-    def __init__(self, auth_server_url, authorization_header_constant):
+    def __init__(self, auth_server_url, authorization_header_constant, *, logger):
         self.auth_server_url = auth_server_url
         self.request_headers = {
                                 'Authorization': authorization_header_constant,
                                 'content-type': 'application/json',
                                }
-        self.logger = logging.getLogger(__name__)
+        self.logger = logger
 
     def get_request(self, path_params=None, headers={}, data=None, cookies=None):
         server_url = self.auth_server_url
@@ -37,6 +37,7 @@ class RestUtility:
 
         self.logger.info('Got <POST> Request for URL: {}'.format(self.auth_server_url))
         self.logger.debug(f'Final request route = {server_url}')
+        self.logger.debug(f'Request Headers = {self.request_headers}')
         return requests.post(
             server_url,
             headers = self.request_headers,

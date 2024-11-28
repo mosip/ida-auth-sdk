@@ -154,7 +154,7 @@ class MOSIPAuthenticator:
     def kyc(self, *,
             individual_id,
             individual_id_type,
-            mographic_data: DemographicsModel,
+            demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
             biometrics: Optional[List[BiometricModel]]=[],
             consent = False,

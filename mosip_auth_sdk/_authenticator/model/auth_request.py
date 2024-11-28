@@ -7,17 +7,27 @@ class MOSIPRequestedAuth(BaseModel):
     otp : bool = False
     bio : bool = False
 
-class DemographicLanguageField(BaseModel):
+class IdentityInfo(BaseModel):
     language: str
     value: str
 
 class DemographicsModel(BaseModel):
-    name : List[DemographicLanguageField]
-    gender : List[DemographicLanguageField]
-    dob : str
-    phoneNumber : Optional[str]
-    emailId : Optional[str]
-    fullAddress : List[DemographicLanguageField]
+    age: str = ''
+    dob: str = ''
+    name: List[IdentityInfo] = []
+    dob_type: List[IdentityInfo] = []
+    gender: List[IdentityInfo] = []
+    phone_number: str = ''
+    email_id: str = ''
+    address_line1: List[IdentityInfo] = []
+    address_line2: List[IdentityInfo] = []
+    address_line3: List[IdentityInfo] = []
+    location1: List[IdentityInfo] = []
+    location2: List[IdentityInfo] = []
+    location3: List[IdentityInfo] = []
+    postal_code: str = ''
+    full_address: List[IdentityInfo] = []
+    metadata: Optional[Dict[str, object]] = None
 
 class MOSIPEncryptAuthRequest(BaseModel):
     biometrics : list

@@ -1,6 +1,6 @@
 from .auth_request import (
     MOSIPRequestedAuth,
-    DemographicLanguageField,
+    IdentityInfo,
     DemographicsModel,
     MOSIPEncryptAuthRequest,
     MOSIPAuthRequest,

@@ -156,7 +156,7 @@ class MOSIPAuthenticator:
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
             biometrics: Optional[List[BiometricModel]]=[],
-            consent_obtained = False,
+            consent = False,
             ):
         return self.__authenticate(
             controller='kyc',
@@ -164,7 +164,7 @@ class MOSIPAuthenticator:
             demographic_data=demographic_data,
             otp_value=otp_value,
             biometrics=biometrics,
-            consent_obtained=consent_obtained,
+            consent_obtained=consent,
         )
 
     def auth(self, *,
@@ -172,7 +172,7 @@ class MOSIPAuthenticator:
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
              biometrics: Optional[List[BiometricModel]]=[],
-            consent_obtained = False,
+            consent = False,
             ):
         return self.__authenticate(
             controller='auth',
@@ -180,7 +180,7 @@ class MOSIPAuthenticator:
             demographic_data=demographic_data,
             otp_value=otp_value,
             biometrics=biometrics,
-            consent_obtained=consent_obtained,
+            consent_obtained=consent,
         )
 
     def __authenticate(

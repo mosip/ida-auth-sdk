@@ -207,13 +207,9 @@ class MOSIPAuthenticator:
             demographics = demographic_data,
             otp = otp_value,
         )
-        self.logger.debug(
-            "Sending auth request",
-            request
-        )
         try:
             auth_request.request, auth_request.requestSessionKey, auth_request.requestHMAC = \
-                self.crypto_util.encrypt_auth_data(request.json())
+                self.crypto_util.encrypt_auth_data(request.json(exclude_unset=True))
             path_params = '/'.join(
                 map(
                     urllib.parse.quote,
@@ -221,6 +217,7 @@ class MOSIPAuthenticator:
                 )
             )
             full_request_json = auth_request.json()
+            self.logger.debug(f"{full_request_json=}")
             signature_header = {'Signature': self.crypto_util.sign_auth_request_data(full_request_json)}
             response = self.auth_rest_util.post_request(path_params=path_params, data=full_request_json, additional_headers=signature_header)
             self.logger.info('Auth Request for Demographic Completed.')

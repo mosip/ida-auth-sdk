@@ -118,7 +118,7 @@ class MOSIPAuthenticator:
         logger.addHandler(fileHandler)
         return logger
 
-    def _get_default_auth_request(self, controller: AuthController, *, timestamp=None, individual_id='', txn_id='', consent_obtained = False):
+    def _get_default_auth_request(self, controller: AuthController, *, timestamp=None, individual_id='', txn_id='', consent_obtained = False, id_type = 'VID'):
         _timestamp = timestamp or datetime.utcnow()
         timestamp_str = _timestamp.strftime(self.timestamp_format) + _timestamp.strftime('.%f')[0:4] + 'Z'
         transaction_id = txn_id or ''.join([secrets.choice(string.digits) for _ in range(10)])
@@ -135,7 +135,7 @@ class MOSIPAuthenticator:
             id = id,
             version = self.ida_auth_version,
             individualId = individual_id,
-            individualIdType = 'VID',
+            individualIdType = id_type,
             transactionID = transaction_id,
             requestTime = timestamp_str,
             ## BaseAuthRequestDto
@@ -152,7 +152,7 @@ class MOSIPAuthenticator:
         )
 
     def kyc(self, *,
-            vid,
+            individual_id,
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
             biometrics: Optional[List[BiometricModel]]=[],
@@ -160,7 +160,7 @@ class MOSIPAuthenticator:
             ):
         return self.__authenticate(
             controller='kyc',
-            vid=vid,
+            individual_id=individual_id,
             demographic_data=demographic_data,
             otp_value=otp_value,
             biometrics=biometrics,
@@ -168,7 +168,7 @@ class MOSIPAuthenticator:
         )
 
     def auth(self, *,
-            vid,
+            individual_id,
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
              biometrics: Optional[List[BiometricModel]]=[],
@@ -176,7 +176,7 @@ class MOSIPAuthenticator:
             ):
         return self.__authenticate(
             controller='auth',
-            vid=vid,
+            individual_id=individual_id,
             demographic_data=demographic_data,
             otp_value=otp_value,
             biometrics=biometrics,
@@ -187,7 +187,7 @@ class MOSIPAuthenticator:
             self,
             *,
             controller: AuthController,
-            vid: str,
+            individual_id: str,
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
             biometrics: Optional[List[BiometricModel]]=[],
@@ -198,7 +198,7 @@ class MOSIPAuthenticator:
         self.logger.info('Received Auth Request for demographic.')
         auth_request = self._get_default_auth_request(
             controller,
-            individual_id=vid,
+            individual_id=individual_id,
             consent_obtained=consent_obtained,
         )
         # auth_request.requestedAuth.demo = True

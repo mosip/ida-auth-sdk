@@ -11,6 +11,9 @@ from jwcrypto import jwk, jws
 
 from ..exceptions import AuthenticatorCryptoException, Errors
 
+## 4 comes from just how b64 encodes, it considers 3 bytes at one go
+## to encode 4 base 64 chars
+_b64pad = lambda s: s + ('=' * ((4 - len(s) % 4) % 4))
 class CryptoUtility:
 
     ## TODO: replace encrypt_config in toml with better schema
@@ -133,11 +136,16 @@ class CryptoUtility:
         return data
 
     def decrypt_auth_data(self, session_key_b64, encrypted_identity_b64):
-        session_key = base64.urlsafe_b64decode(session_key_b64)
-        encrypted_identity = base64.urlsafe_b64decode(encrypted_identity_b64)
+        ## sometimes response doesn't pad the data correctly
+        ## temporary workaround
+        session_key_b64_padded = _b64pad(session_key_b64)
+        encrypted_identity_b64_padded = _b64pad(encrypted_identity_b64)
+        session_key = base64.urlsafe_b64decode(session_key_b64_padded)
+        encrypted_identity = base64.urlsafe_b64decode(encrypted_identity_b64_padded)
         sym_key = self._asymmetric_decrypt(session_key)
         identity = self._symmetric_decrypt(encrypted_identity, sym_key)
-        return identity
+        ## TODO: decide whether  we should be doing this here
+        return json.loads(identity)
 
     def encrypt_auth_data(self, auth_data):
         self.logger.info('Request for Auth Data Encryption.')

@@ -24,6 +24,8 @@ class CryptoUtility:
             self.logger = logger
 
         self.encrypt_cert_obj = CryptoUtility._get_certificate_obj(encrypt_config.encrypt_cert_path, self.logger)
+
+        # XXX: make this optional??
         self.decrypt_private_key, *_ = CryptoUtility._get_priv_key_cert(
             encrypt_config.decrypt_p12_file_path,
             str(encrypt_config.decrypt_p12_file_password),

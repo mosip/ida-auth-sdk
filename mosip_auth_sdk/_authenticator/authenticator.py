@@ -77,7 +77,7 @@ class MOSIPAuthenticator:
             self.logger = logger
 
         self.auth_rest_util = RestUtility(config.mosip_auth_server.ida_auth_url, config.mosip_auth.authorization_header_constant, logger=self.logger)
-        self.crypto_util = CryptoUtility(config.crypto_encrypt, config.crypto_signature)
+        self.crypto_util = CryptoUtility(config.crypto_encrypt, config.crypto_signature, self.logger)
 
         self.auth_domain_scheme = config.mosip_auth_server.ida_auth_domain_uri
 
@@ -186,6 +186,15 @@ class MOSIPAuthenticator:
             biometrics=biometrics,
             consent_obtained=consent,
         )
+
+    def decrypt_response(self, response_body):
+        r = response_body.get('response')
+        session_key_b64 = r.get('sessionKey')
+        identity_b64 = r.get('identity')
+        # thumbprint should match the SHA-256 hex of the partner certificate
+        #thumbprint = response_body.get('thumbprint')
+        decrypted = self.crypto_util.decrypt_auth_data(session_key_b64, identity_b64)
+        return decrypted
 
     def __authenticate(
             self,

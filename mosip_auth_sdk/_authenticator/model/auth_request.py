@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Literal, Dict
 
 class MOSIPRequestedAuth(BaseModel):
@@ -12,21 +12,21 @@ class IdentityInfo(BaseModel):
     value: str
 
 class DemographicsModel(BaseModel):
-    age: str = None
+    age: str = ''
     dob: str = ''
     name: List[IdentityInfo] = []
-    dob_type: List[IdentityInfo] = []
-    gender: List[IdentityInfo] = []
-    phone_number: str = ''
-    email_id: str = ''
-    address_line1: List[IdentityInfo] = []
-    address_line2: List[IdentityInfo] = []
-    address_line3: List[IdentityInfo] = []
-    location1: List[IdentityInfo] = []
-    location2: List[IdentityInfo] = []
-    location3: List[IdentityInfo] = []
-    postal_code: str = ''
-    full_address: List[IdentityInfo] = []
+    dobType: List[IdentityInfo] = Field(default_factory=list, alias='dob_type')
+    gender: List[IdentityInfo] = Field(default_factory=list)
+    phoneNumber: str = Field(default='', alias='phone_number')
+    emailId: str = Field(default='', alias='email_id')
+    addressLine1: List[IdentityInfo] = Field(default_factory=list, alias='address_line1')
+    addressLine2: List[IdentityInfo] = Field(default_factory=list, alias='address_line2')
+    addressLine3: List[IdentityInfo] = Field(default_factory=list, alias='address_line3')
+    location1: List[IdentityInfo] = Field(default_factory=list)
+    location2: List[IdentityInfo] = Field(default_factory=list)
+    location3: List[IdentityInfo] = Field(default_factory=list)
+    postalCode: str = Field(default='', alias='postal_code')
+    fullAddress: List[IdentityInfo] = Field(default_factory=list, alias='full_address')
     metadata: Optional[Dict[str, object]] = None
 
 class MOSIPEncryptAuthRequest(BaseModel):

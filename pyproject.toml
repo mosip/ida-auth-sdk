@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mosip-auth-sdk"
-version = "0.1.0"
+version = "0.2.0"
 description = "Simplified SDK for MOSIP Authentication"
 authors = ["Abdul Bathish"]
 license = "Mozilla Public License Version 2.0"

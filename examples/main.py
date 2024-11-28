@@ -1,3 +1,4 @@
+import sys
 from mosip_auth_sdk import MOSIPAuthenticator
 from mosip_auth_sdk.models import DemographicsModel, BiometricModel
 from dynaconf import Dynaconf
@@ -20,10 +21,13 @@ response = authenticator.kyc(
     vid='4370296312658178',
     demographic_data=demographics_data,
 )
-resp_body = response.json()
-errors = resp_body.get('errors') or []
+response_body = response.json()
+errors = response_body.get('errors') or []
 if errors:
     for error in errors:
         print(error.get('errorCode'), ':', error.get('errorMessage'))
+    sys.exit(1)
 
 print(response.status_code)
+decrypted_response = authenticator.decrypt_response(response_body)
+print(decrypted_response)

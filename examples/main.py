@@ -12,9 +12,9 @@ demographics_data = DemographicsModel(
     name=[{'language': 'en', 'value': 'Bathish'}],
     gender=[{'language': 'en', 'value': 'Male'}],
     dob="2002-12-01",
-    phoneNumber="9876543210",
-    emailId="arbathish@noreply.github.com",
-    fullAddress=[{'language': 'en', 'value': '123 Main St'}]
+    phone_number="9876543210",
+    email_id="arbathish@noreply.github.com",
+    full_address=[{'language': 'en', 'value': '123 Main St'}]
 )
 response = authenticator.kyc(
     vid='4370296312658178',

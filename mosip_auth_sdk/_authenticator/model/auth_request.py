@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict
 
 class MOSIPRequestedAuth(BaseModel):
     demo : bool = False
@@ -12,7 +12,7 @@ class IdentityInfo(BaseModel):
     value: str
 
 class DemographicsModel(BaseModel):
-    age: str = ''
+    age: str = None
     dob: str = ''
     name: List[IdentityInfo] = []
     dob_type: List[IdentityInfo] = []

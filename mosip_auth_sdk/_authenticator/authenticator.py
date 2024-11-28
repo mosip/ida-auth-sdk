@@ -118,7 +118,7 @@ class MOSIPAuthenticator:
         logger.addHandler(fileHandler)
         return logger
 
-    def _get_default_auth_request(self, controller: AuthController, *, timestamp=None, individual_id='', txn_id=''):
+    def _get_default_auth_request(self, controller: AuthController, *, timestamp=None, individual_id='', txn_id='', consent_obtained = False):
         _timestamp = timestamp or datetime.utcnow()
         timestamp_str = _timestamp.strftime(self.timestamp_format) + _timestamp.strftime('.%f')[0:4] + 'Z'
         transaction_id = txn_id or ''.join([secrets.choice(string.digits) for _ in range(10)])
@@ -136,7 +136,7 @@ class MOSIPAuthenticator:
             env = self.ida_auth_env,
             domainUri = self.auth_domain_scheme,
             specVersion = self.ida_auth_version,
-            consentObtained = True,
+            consentObtained = consent_obtained,
             metadata = {},
             thumbprint = self.crypto_util.enc_cert_thumbprint,
             individualId = individual_id,
@@ -152,28 +152,32 @@ class MOSIPAuthenticator:
             vid,
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
-            biometrics: Optional[List[BiometricModel]]=[]
+            biometrics: Optional[List[BiometricModel]]=[],
+            consent_obtained = False,
             ):
         return self.__authenticate(
             controller='kyc',
             vid=vid,
             demographic_data=demographic_data,
             otp_value=otp_value,
-            biometrics=biometrics
+            biometrics=biometrics,
+            consent_obtained=consent_obtained,
         )
 
     def auth(self, *,
             vid,
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
-            biometrics: Optional[List[BiometricModel]]=[]
+             biometrics: Optional[List[BiometricModel]]=[],
+            consent_obtained = False,
             ):
         return self.__authenticate(
-            controller='',
+            controller='auth',
             vid=vid,
             demographic_data=demographic_data,
             otp_value=otp_value,
-            biometrics=biometrics
+            biometrics=biometrics,
+            consent_obtained=consent_obtained,
         )
 
     def __authenticate(
@@ -183,7 +187,8 @@ class MOSIPAuthenticator:
             vid: str,
             demographic_data: DemographicsModel,
             otp_value: Optional[str]='',
-            biometrics: Optional[List[BiometricModel]]=[]
+            biometrics: Optional[List[BiometricModel]]=[],
+            consent_obtained=False,
     ):
         '''
         '''
@@ -191,6 +196,7 @@ class MOSIPAuthenticator:
         auth_request = self._get_default_auth_request(
             controller,
             individual_id=vid,
+            consent_obtained=consent_obtained,
         )
         auth_request.requestedAuth.demo = True
         auth_request.requestedAuth.otp = bool(otp_value)

@@ -1,130 +1,122 @@
 # Mosip Authentication SDK
 
-**MOSIP Authentication SDK** is a Python wrapper for interacting with the **MOSIP Authentication Service**, enabling developers to integrate authentication workflows into their systems. The SDK simplifies the interaction with MOSIP's backend authentication services, providing methods to authenticate individuals based on demographic data, biometrics, and other identifiers.
+MOSIP Authentication SDK is a Python wrapper for interacting with the MOSIP Authentication Service, enabling developers to integrate authentication workflows into their systems. The SDK simplifies the interaction with MOSIP's backend authentication services, providing methods to authenticate individuals based on demographic data, biometrics, and other identifiers.
+
+## Controllers
 
 MOSIP provides two main authentication controllers:
 
 1. **kyc-auth-controller**  
-   Used for **Know Your Customer (KYC)** authentication, which includes verifying identity using demographic data and biometrics.  
+   Used for Know Your Customer (KYC) authentication, which includes verifying identity using demographic data and biometrics.  
    [API Documentation](https://mosip.github.io/documentation/1.2.0/authentication-service.html#tag/kyc-auth-controller)
 
 2. **auth-controller**  
    Used for general authentication of individuals, allowing for verification based on a variety of identifiers and biometric data.  
    [API Documentation](https://mosip.github.io/documentation/1.2.0/authentication-service.html#operation/authenticateIndividual)
 
-The SDK provides wrappers for these two controllers through the `kyc` and `auth` methods.
-
----
-
 ## Methods
 
 ### `kyc` Method
 
-The `kyc` method is used to authenticate individuals via the KYC authentication controller.
-
-**Method Signature:**
 ```python
 kyc(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: str = None, biometrics: list[BiometricModel] = None, consent: bool = False) -> Response
 ```
 
 ### `auth` Method
 
-The `auth` method is used to authenticate individuals via the **auth-controller**.
-
-**Method Signature:**
 ```python
 auth(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: Optional[str] = None, biometrics: Optional[List[BiometricModel]] = None, consent: bool = False) -> Response
 ```
----
 
-## Common Parameters for `auth` and `kyc`:
+### Common Parameters
 
-- **individual_id (str)**: The unique ID of the individual to authenticate (e.g., VID, UIN).
-- **individual_id_type (str)**: The type of the ID being used (e.g., VID, UIN).
-- **demographic_data (DemographicsModel)**: The demographic data for the individual (e.g., name, address).
-- **otp_value (Optional[str])**: The One-Time Password (OTP) value, if applicable (default is None).
-- **consent (bool)**: Indicates whether consent has been obtained for authentication (default is False).
-
----
+- **individual_id (str)**: The unique ID of the individual to authenticate (e.g., VID, UIN)
+- **individual_id_type (str)**: The type of the ID being used (e.g., VID, UIN)
+- **demographic_data (DemographicsModel)**: The demographic data for the individual (e.g., name, address)
+- **otp_value (Optional[str])**: The One-Time Password (OTP) value, if applicable (default is None)
+- **consent (bool)**: Indicates whether consent has been obtained for authentication (default is False)
 
 ## Installation
-
-To install the **MOSIP Authentication SDK**, run the following command:
 
 ```bash
 pip install mosip_auth_sdk
 ```
 
-# Usage
+## Usage
+
 ```python
-    from mosip_auth_sdk import MOSIPAuthenticator
-    from mosip_auth_sdk.models import DemographicsModel, BiometricModel
-    
-    # Initialize the authenticator with configuration settings
-    authenticator = MOSIPAuthenticator(config={
-        # Your configuration settings go here.
-        # Refer to authenticator-config.toml for the required values.
-    })
-    
-    # Prepare demographic data
-    demographics_data = DemographicsModel(
-        # Provide demographic details based on your needs
-    )
-    
-    # Make a KYC request
-    response = authenticator.kyc(
-        individual_id='<some_id>',  # Replace with actual ID
-        individual_id_type='VID',  # Replace with the type of ID being used
-        demographic_data=demographics_data,
-        otp_value='<otp_value>',  # Optional
-        biometrics=biometrics,  # Optional
-        consent=True  # Indicates if consent has been obtained
-    )
-    
-    # Handle the response
-    response_body = response.json()
-    errors = response_body.get('errors', [])
-    
-    if errors:
-        # Handle errors
-        pass
-    else:
-        # Process the successful response
-        decrypted_response = authenticator.decrypt_response(response_body)
-        # Further processing with decrypted_response
+from mosip_auth_sdk import MOSIPAuthenticator
+from mosip_auth_sdk.models import DemographicsModel, BiometricModel
+
+# Initialize the authenticator with configuration settings
+authenticator = MOSIPAuthenticator(config={
+    # Your configuration settings go here.
+    # Refer to authenticator-config.toml for the required values.
+})
+
+# Prepare demographic data
+demographics_data = DemographicsModel(
+    # Provide demographic details based on your needs
+)
+
+# Make a KYC request
+response = authenticator.kyc(
+    individual_id='<some_id>',  # Replace with actual ID
+    individual_id_type='VID',  # Replace with the type of ID being used
+    demographic_data=demographics_data,
+    otp_value='<otp_value>',  # Optional
+    biometrics=biometrics,  # Optional
+    consent=True  # Indicates if consent has been obtained
+)
+
+# Handle the response
+response_body = response.json()
+errors = response_body.get('errors', [])
+
+if errors:
+    # Handle errors
+    pass
+else:
+    # Process the successful response
+    decrypted_response = authenticator.decrypt_response(response_body)
+    # Further processing with decrypted_response
 ```
 
-# Prerequisites for building
-* Python 3 (tested on 3.10.7), lower versions may or may not work.
-* Poetry (recommended, optional)
-  install
-  ```sh
-  python3 -m pip install poetry
-  ```
-  
-# Dependencies for building
-  ```sh
-    python3 -m poetry install
-  ```
-  If you don't want to use poetry you can install the requirements directly using pip
-  ```sh
-  python3 -m pip install -r requirements.txt
-  ```
-# Build
-    ```sh
-    python3 -m poetry build
-    ```
+## Development Setup
 
-# Publish
-```sh
-    python3 -m poetry publish
+### Prerequisites
+- Python 3 (tested on 3.10.7)
+- Poetry (recommended, optional)
+
+### Install Poetry
+```bash
+python3 -m pip install poetry
 ```
 
-# Testing
+### Install Dependencies
+Using Poetry:
+```bash
+python3 -m poetry install
+```
 
-To test the SDK, you can refer to the `main.py` file available in the `examples` folder. This file provides a ready-to-use code snippet demonstrating how to interact with the MOSIP Authentication Service using the SDK.
+Using pip:
+```bash
+python3 -m pip install -r requirements.txt
+```
 
-Simply navigate to the `examples` folder and run `main.py` to see the SDK in action. Ensure that you have the necessary configuration and dependencies set up before running the example.
+### Build
+```bash
+python3 -m poetry build
+```
+
+### Publish
+```bash
+python3 -m poetry publish
+```
+
+## Testing
+
+Example code is available in the `examples` folder. To test:
 
 ```bash
 python examples/main.py

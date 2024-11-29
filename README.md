@@ -11,15 +11,10 @@
         # Refer to authenticator-config.toml for the required values.
     })
     
-    # Prepare demographic data and biometric data
+    # Prepare demographic data
     demographics_data = DemographicsModel(
         # Provide demographic details based on your needs
     )
-    
-    biometrics = [
-        BiometricModel(),  # Add biometric data as required
-        BiometricModel()
-    ]
     
     # Make a KYC request
     response = authenticator.kyc(

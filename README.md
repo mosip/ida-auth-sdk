@@ -112,3 +112,11 @@ pip install mosip_auth_sdk
 ```
 
 # Testing
+
+To test the SDK, you can refer to the `main.py` file available in the `examples` folder. This file provides a ready-to-use code snippet demonstrating how to interact with the MOSIP Authentication Service using the SDK.
+
+Simply navigate to the `examples` folder and run `main.py` to see the SDK in action. Ensure that you have the necessary configuration and dependencies set up before running the example.
+
+```bash
+python examples/main.py
+```

@@ -1,25 +1,25 @@
-import sys
 from mosip_auth_sdk import MOSIPAuthenticator
-from mosip_auth_sdk.models import DemographicsModel, BiometricModel
+from mosip_auth_sdk.models import DemographicsModel
 from dynaconf import Dynaconf
+import json
+import sys
 
 config = Dynaconf(
-    settings_files=['./tests/authenticator-config.toml'],
+    settings_files=['./authenticator-config.toml'],
     environments=False,
 )
-
 authenticator = MOSIPAuthenticator(config=config)
 demographics_data = DemographicsModel(
-    name=[{'language': 'en', 'value': 'Bathish'}],
-    gender=[{'language': 'en', 'value': 'Male'}],
-    dob="2002-12-01",
-    phone_number="9876543210",
-    email_id="arbathish@noreply.github.com",
-    full_address=[{'language': 'en', 'value': '123 Main St'}]
+    name=[{'language': 'eng', 'value': 'jevan  mksm'}],
 )
+print("Demographics data:", demographics_data.model_dump())
+
+
 response = authenticator.kyc(
-    vid='4370296312658178',
+    individual_id='4370296312658178',
+    individual_id_type='VID',
     demographic_data=demographics_data,
+    consent=True
 )
 response_body = response.json()
 errors = response_body.get('errors') or []

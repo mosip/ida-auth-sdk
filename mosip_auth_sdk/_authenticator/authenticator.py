@@ -14,51 +14,55 @@ AuthController: TypeAlias = Literal['kyc', 'auth']
 
 class MOSIPAuthenticator:
     """
-    Wrapper for the Mosip Authentication Service.
-
+    Wrapper for the MOSIP Authentication Service.
+    
     MOSIP provides two authentication controllers:
     1. kyc-auth-controller:
        - Reference: https://mosip.github.io/documentation/1.2.0/authentication-service.html#tag/kyc-auth-controller
     2. auth-controller:
        - Reference: https://mosip.github.io/documentation/1.2.0/authentication-service.html#operation/authenticateIndividual
-
+    
     These methods are exposed via the `kyc` and `auth` methods respectively.
-
+    
     Methods:
-        kyc(vid: str, demographic_data: DemographicsModel, otp_value: str = None, biometrics: list[BiometricModel] = None) -> Response:
+        kyc(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: str = None, biometrics: list[BiometricModel] = None, consent: bool = False) -> Response:
             Wrapper for the kyc-auth-controller
-
-        auth(vid: str, demographic_data: DemographicsModel, otp_value: Optional[str] = None, biometrics: Optional[List[BiometricModel]] = None) -> Response:
+    
+        auth(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: Optional[str] = None, biometrics: Optional[List[BiometricModel]] = None, consent: bool = False) -> Response:
             Wrapper for the auth-controller
-
+    
     Common Parameters for `auth`, `kyc`:
-        vid (str): The unique VID  of the individual to authenticate.
+        individual_id (str): The unique ID of the individual to authenticate.
+        individual_id_type (str): The type of ID (e.g., VID, UIN).
         demographic_data (DemographicsModel): The demographic data for the individual.
         otp_value (Optional[str]): The One-Time Password (OTP) value, if applicable. Default is None.
         biometrics (Optional[List[BiometricModel]]): A list of biometric data models for the individual, if applicable. Default is None.
-
+        consent (bool): Indicates whether consent has been obtained for authentication. Default is False.
+    
     Example:
     --------
     ```python
     from mosip_auth_sdk import MOSIPAuthenticator
     from mosip_auth_sdk.models import DemographicsModel, BiometricModel
-
+    
     authenticator = MOSIPAuthenticator(config={
         # Your configuration settings go here.
         # Refer to tests/authenticator-config.toml for the required values.
     })
-
-    # Refer the DemographicsModel, BiometricModel documentation to know
+    
+    # Refer to the DemographicsModel, BiometricModel documentation to know
     # the exact arguments to be passed in there
     demographics_data = DemographicsModel()
     biometrics = [BiometricModel(), BiometricModel()]
-
+    
     # Make a KYC request
     response = authenticator.kyc(
-        vid='<some_vid>',
+        individual_id='<some_id>',
+        individual_id_type='VID',  # Replace with the type of ID being used
         demographic_data=demographics_data,
         otp_value='323',  # Optional
         biometrics=biometrics,  # Optional
+        consent=True  # Indicates if consent has been obtained
     )
     ```
     """

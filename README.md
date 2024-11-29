@@ -18,11 +18,11 @@ The SDK provides wrappers for these two controllers through the `kyc` and `auth`
 
 ## Methods
 
-### `kyc(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: str = None, biometrics: list[BiometricModel] = None, consent: bool = False) -> Response`
+## `kyc(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: str = None, biometrics: list[BiometricModel] = None, consent: bool = False) -> Response`
 - Wrapper for the **kyc-auth-controller**.
 - This method is used to perform KYC-based authentication by sending individual ID, demographic data, biometrics (optional), and consent status to the MOSIP service.
 
-### `auth(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: Optional[str] = None, biometrics: Optional[List[BiometricModel]] = None, consent: bool = False) -> Response`
+## `auth(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: Optional[str] = None, biometrics: Optional[List[BiometricModel]] = None, consent: bool = False) -> Response`
 - Wrapper for the **auth-controller**.
 - This method authenticates an individual using their ID and related demographic information, along with optional OTP and biometric data.
 
@@ -45,6 +45,7 @@ To install the **MOSIP Authentication SDK**, run the following command:
 
 ```bash
 pip install mosip_auth_sdk
+```
 
 # Usage
 ```python

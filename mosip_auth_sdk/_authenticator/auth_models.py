@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal, Dict
+from typing import List, Optional, Dict
 
 class MOSIPRequestedAuth(BaseModel):
     demo : bool = False

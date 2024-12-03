@@ -1,7 +1,6 @@
 from mosip_auth_sdk import MOSIPAuthenticator
 from mosip_auth_sdk.models import DemographicsModel
 from dynaconf import Dynaconf
-import json
 import sys
 
 config = Dynaconf(

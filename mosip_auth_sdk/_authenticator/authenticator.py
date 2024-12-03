@@ -15,22 +15,22 @@ AuthController: TypeAlias = Literal['kyc', 'auth']
 class MOSIPAuthenticator:
     """
     Wrapper for the MOSIP Authentication Service.
-    
+
     MOSIP provides two authentication controllers:
     1. kyc-auth-controller:
        - Reference: https://mosip.github.io/documentation/1.2.0/authentication-service.html#tag/kyc-auth-controller
     2. auth-controller:
        - Reference: https://mosip.github.io/documentation/1.2.0/authentication-service.html#operation/authenticateIndividual
-    
+
     These methods are exposed via the `kyc` and `auth` methods respectively.
-    
+
     Methods:
         kyc(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: str = None, biometrics: list[BiometricModel] = None, consent: bool = False) -> Response:
             Wrapper for the kyc-auth-controller
-    
+
         auth(individual_id: str, individual_id_type: str, demographic_data: DemographicsModel, otp_value: Optional[str] = None, biometrics: Optional[List[BiometricModel]] = None, consent: bool = False) -> Response:
             Wrapper for the auth-controller
-    
+
     Common Parameters for `auth`, `kyc`:
         individual_id (str): The unique ID of the individual to authenticate.
         individual_id_type (str): The type of ID (e.g., VID, UIN).
@@ -38,23 +38,23 @@ class MOSIPAuthenticator:
         otp_value (Optional[str]): The One-Time Password (OTP) value, if applicable. Default is None.
         biometrics (Optional[List[BiometricModel]]): A list of biometric data models for the individual, if applicable. Default is None.
         consent (bool): Indicates whether consent has been obtained for authentication. Default is False.
-    
+
     Example:
     --------
     ```python
     from mosip_auth_sdk import MOSIPAuthenticator
     from mosip_auth_sdk.models import DemographicsModel, BiometricModel
-    
+
     authenticator = MOSIPAuthenticator(config={
         # Your configuration settings go here.
         # Refer to tests/authenticator-config.toml for the required values.
     })
-    
+
     # Refer to the DemographicsModel, BiometricModel documentation to know
     # the exact arguments to be passed in there
     demographics_data = DemographicsModel()
     biometrics = [BiometricModel(), BiometricModel()]
-    
+
     # Make a KYC request
     response = authenticator.kyc(
         individual_id='<some_id>',
@@ -97,6 +97,51 @@ class MOSIPAuthenticator:
         self.ida_auth_env = config.mosip_auth.ida_auth_env
         self.timestamp_format = config.mosip_auth.timestamp_format
         self.authorization_header_constant = config.mosip_auth.authorization_header_constant
+
+    def auth(self, *,
+             individual_id,
+             individual_id_type,
+             demographic_data: DemographicsModel,
+             otp_value: Optional[str]='',
+             biometrics: Optional[List[BiometricModel]]=[],
+             consent = False,
+            ):
+        return self._authenticate(
+            controller='auth',
+            individual_id=individual_id,
+            individual_id_type=individual_id_type,
+            demographic_data=demographic_data,
+            otp_value=otp_value,
+            biometrics=biometrics,
+            consent_obtained=consent,
+        )
+
+    def kyc(self, *,
+            individual_id,
+            individual_id_type,
+            demographic_data: DemographicsModel,
+            otp_value: Optional[str]='',
+            biometrics: Optional[List[BiometricModel]]=[],
+            consent = False,
+            ):
+        return self._authenticate(
+            controller='kyc',
+            individual_id=individual_id,
+            individual_id_type=individual_id_type,
+            demographic_data=demographic_data,
+            otp_value=otp_value,
+            biometrics=biometrics,
+            consent_obtained=consent,
+        )
+
+    def decrypt_response(self, response_body):
+        r = response_body.get('response')
+        session_key_b64 = r.get('sessionKey')
+        identity_b64 = r.get('identity')
+        # thumbprint should match the SHA-256 hex of the partner certificate
+        #thumbprint = response_body.get('thumbprint')
+        decrypted = self.crypto_util.decrypt_auth_data(session_key_b64, identity_b64)
+        return decrypted
 
     @staticmethod
     def _validate_config(config):
@@ -155,52 +200,9 @@ class MOSIPAuthenticator:
             metadata = {},
         )
 
-    def kyc(self, *,
-            individual_id,
-            individual_id_type,
-            demographic_data: DemographicsModel,
-            otp_value: Optional[str]='',
-            biometrics: Optional[List[BiometricModel]]=[],
-            consent = False,
-            ):
-        return self.__authenticate(
-            controller='kyc',
-            individual_id=individual_id,
-            individual_id_type=individual_id_type,
-            demographic_data=demographic_data,
-            otp_value=otp_value,
-            biometrics=biometrics,
-            consent_obtained=consent,
-        )
 
-    def auth(self, *,
-             individual_id,
-             individual_id_type,
-             demographic_data: DemographicsModel,
-             otp_value: Optional[str]='',
-             biometrics: Optional[List[BiometricModel]]=[],
-             consent = False,
-            ):
-        return self.__authenticate(
-            controller='auth',
-            individual_id=individual_id,
-            individual_id_type=individual_id_type,
-            demographic_data=demographic_data,
-            otp_value=otp_value,
-            biometrics=biometrics,
-            consent_obtained=consent,
-        )
 
-    def decrypt_response(self, response_body):
-        r = response_body.get('response')
-        session_key_b64 = r.get('sessionKey')
-        identity_b64 = r.get('identity')
-        # thumbprint should match the SHA-256 hex of the partner certificate
-        #thumbprint = response_body.get('thumbprint')
-        decrypted = self.crypto_util.decrypt_auth_data(session_key_b64, identity_b64)
-        return decrypted
-
-    def __authenticate(
+    def _authenticate(
             self,
             *,
             controller: AuthController,

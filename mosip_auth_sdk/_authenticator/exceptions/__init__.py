@@ -1,11 +1,7 @@
 from .authenticator_exception import (
     AuthenticatorCryptoException,
     AuthenticatorException,
-    Errors
+    Errors,
 )
 
-__all__ = [
-    "AuthenticatorCryptoException",
-    "AuthenticatorException",
-    "Errors"
-]
+__all__ = ["AuthenticatorCryptoException", "AuthenticatorException", "Errors"]

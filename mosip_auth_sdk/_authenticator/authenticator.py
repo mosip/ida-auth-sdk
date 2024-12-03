@@ -2,7 +2,6 @@ import string
 import secrets
 import logging
 import sys
-import traceback
 import urllib
 from datetime import datetime
 from typing import Literal, Optional, Dict, TypeAlias, List

@@ -6,7 +6,7 @@ import traceback
 import urllib
 from datetime import datetime
 from typing import Literal, Optional, Dict, TypeAlias, List
-from .model import MOSIPAuthRequest, DemographicsModel, MOSIPEncryptAuthRequest, BiometricModel
+from .auth_models import MOSIPAuthRequest, DemographicsModel, MOSIPEncryptAuthRequest, BiometricModel
 from .utils import CryptoUtility, RestUtility
 from .exceptions import AuthenticatorException, Errors
 

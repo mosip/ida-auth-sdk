@@ -6,11 +6,17 @@ import traceback
 import urllib
 from datetime import datetime
 from typing import Literal, Optional, Dict, TypeAlias, List
-from .auth_models import MOSIPAuthRequest, DemographicsModel, MOSIPEncryptAuthRequest, BiometricModel
+from .auth_models import (
+    MOSIPAuthRequest,
+    DemographicsModel,
+    MOSIPEncryptAuthRequest,
+    BiometricModel,
+)
 from .utils import CryptoUtility, RestUtility
-from .exceptions import AuthenticatorException, Errors
+from .exceptions import AuthenticatorException, Errors, AuthenticatorCryptoException
 
-AuthController: TypeAlias = Literal['kyc', 'auth']
+AuthController: TypeAlias = Literal["kyc", "auth"]
+
 
 class MOSIPAuthenticator:
     """
@@ -68,8 +74,7 @@ class MOSIPAuthenticator:
     """
 
     def __init__(self, *, config, logger=None):
-        '''
-        '''
+        """ """
         self._validate_config(config)
         if not logger:
             self.logger = self._init_logger(
@@ -80,34 +85,44 @@ class MOSIPAuthenticator:
         else:
             self.logger = logger
 
-        self.auth_rest_util = RestUtility(config.mosip_auth_server.ida_auth_url, config.mosip_auth.authorization_header_constant, logger=self.logger)
-        self.crypto_util = CryptoUtility(config.crypto_encrypt, config.crypto_signature, self.logger)
+        self.auth_rest_util = RestUtility(
+            config.mosip_auth_server.ida_auth_url,
+            config.mosip_auth.authorization_header_constant,
+            logger=self.logger,
+        )
+        self.crypto_util = CryptoUtility(
+            config.crypto_encrypt, config.crypto_signature, self.logger
+        )
 
         self.auth_domain_scheme = config.mosip_auth_server.ida_auth_domain_uri
 
-        self.partner_misp_lk =  str(config.mosip_auth.partner_misp_lk)
+        self.partner_misp_lk = str(config.mosip_auth.partner_misp_lk)
         self.partner_id = str(config.mosip_auth.partner_id)
         self.partner_apikey = str(config.mosip_auth.partner_apikey)
 
         self.ida_auth_version = config.mosip_auth.ida_auth_version
-        self.ida_auth_request_id_by_controller: Dict[AuthController, str]  = {
-            'auth': config.mosip_auth.ida_auth_request_demo_id,
-            'kyc': config.mosip_auth.ida_auth_request_kyc_id,
+        self.ida_auth_request_id_by_controller: Dict[AuthController, str] = {
+            "auth": config.mosip_auth.ida_auth_request_demo_id,
+            "kyc": config.mosip_auth.ida_auth_request_kyc_id,
         }
         self.ida_auth_env = config.mosip_auth.ida_auth_env
         self.timestamp_format = config.mosip_auth.timestamp_format
-        self.authorization_header_constant = config.mosip_auth.authorization_header_constant
+        self.authorization_header_constant = (
+            config.mosip_auth.authorization_header_constant
+        )
 
-    def auth(self, *,
-             individual_id,
-             individual_id_type,
-             demographic_data: DemographicsModel,
-             otp_value: Optional[str]='',
-             biometrics: Optional[List[BiometricModel]]=[],
-             consent = False,
-            ):
+    def auth(
+        self,
+        *,
+        individual_id,
+        individual_id_type,
+        demographic_data: DemographicsModel,
+        otp_value: Optional[str] = "",
+        biometrics: Optional[List[BiometricModel]] = [],
+        consent=False,
+    ):
         return self._authenticate(
-            controller='auth',
+            controller="auth",
             individual_id=individual_id,
             individual_id_type=individual_id_type,
             demographic_data=demographic_data,
@@ -116,16 +131,18 @@ class MOSIPAuthenticator:
             consent_obtained=consent,
         )
 
-    def kyc(self, *,
-            individual_id,
-            individual_id_type,
-            demographic_data: DemographicsModel,
-            otp_value: Optional[str]='',
-            biometrics: Optional[List[BiometricModel]]=[],
-            consent = False,
-            ):
+    def kyc(
+        self,
+        *,
+        individual_id,
+        individual_id_type,
+        demographic_data: DemographicsModel,
+        otp_value: Optional[str] = "",
+        biometrics: Optional[List[BiometricModel]] = [],
+        consent=False,
+    ):
         return self._authenticate(
-            controller='kyc',
+            controller="kyc",
             individual_id=individual_id,
             individual_id_type=individual_id_type,
             demographic_data=demographic_data,
@@ -135,27 +152,27 @@ class MOSIPAuthenticator:
         )
 
     def decrypt_response(self, response_body):
-        r = response_body.get('response')
-        session_key_b64 = r.get('sessionKey')
-        identity_b64 = r.get('identity')
+        r = response_body.get("response")
+        session_key_b64 = r.get("sessionKey")
+        identity_b64 = r.get("identity")
         # thumbprint should match the SHA-256 hex of the partner certificate
-        #thumbprint = response_body.get('thumbprint')
+        # thumbprint = response_body.get('thumbprint')
         decrypted = self.crypto_util.decrypt_auth_data(session_key_b64, identity_b64)
         return decrypted
 
     @staticmethod
     def _validate_config(config):
         if not config.mosip_auth_server.ida_auth_url:
-            raise KeyError("Config should have 'ida_auth_url' set under [mosip_auth_server] section")
+            raise KeyError(
+                "Config should have 'ida_auth_url' set under [mosip_auth_server] section"
+            )
         if not config.mosip_auth_server.ida_auth_domain_uri:
-            raise KeyError("Config should have 'ida_auth_domain_uri' set under [mosip_auth_server] section")
+            raise KeyError(
+                "Config should have 'ida_auth_domain_uri' set under [mosip_auth_server] section"
+            )
 
     @staticmethod
-    def _init_logger(
-            *,
-            file_path,
-            format,
-            level):
+    def _init_logger(*, file_path, format, level):
         logger = logging.getLogger(file_path)
         logger.setLevel(level)
         fileHandler = logging.FileHandler(file_path)
@@ -167,86 +184,122 @@ class MOSIPAuthenticator:
         logger.addHandler(fileHandler)
         return logger
 
-    def _get_default_auth_request(self, controller: AuthController, *, timestamp=None, individual_id='', txn_id='', consent_obtained = False, id_type = 'VID'):
+    def _get_default_auth_request(
+        self,
+        controller: AuthController,
+        *,
+        timestamp=None,
+        individual_id="",
+        txn_id="",
+        consent_obtained=False,
+        id_type="VID",
+    ):
         _timestamp = timestamp or datetime.utcnow()
-        timestamp_str = _timestamp.strftime(self.timestamp_format) + _timestamp.strftime('.%f')[0:4] + 'Z'
-        transaction_id = txn_id or ''.join([secrets.choice(string.digits) for _ in range(10)])
-        id = self.ida_auth_request_id_by_controller.get(controller, '')
+        timestamp_str = (
+            _timestamp.strftime(self.timestamp_format)
+            + _timestamp.strftime(".%f")[0:4]
+            + "Z"
+        )
+        transaction_id = txn_id or "".join(
+            [secrets.choice(string.digits) for _ in range(10)]
+        )
+        id = self.ida_auth_request_id_by_controller.get(controller, "")
         if not id:
             err_msg = Errors.AUT_CRY_005.value.format(
                 repr(controller),
-                ' | '.join(self.ida_auth_request_id_by_controller.keys())
+                " | ".join(self.ida_auth_request_id_by_controller.keys()),
             )
-            self.logger.error('Received Auth Request for demographic.')
+            self.logger.error("Received Auth Request for demographic.")
             raise AuthenticatorException(Errors.AUT_CRY_005.name, err_msg)
         return MOSIPAuthRequest(
             ## BaseRequestDto(https://github.com/mosip/id-authentication/blob/d879209bc9e7c5aa7a84151372c450749fca5edf/authentication/authentication-core/src/main/java/io/mosip/authentication/core/indauth/dto/BaseRequestDTO.java#L13)
-            id = id,
-            version = self.ida_auth_version,
-            individualId = individual_id,
-            individualIdType = id_type,
-            transactionID = transaction_id,
-            requestTime = timestamp_str,
+            id=id,
+            version=self.ida_auth_version,
+            individualId=individual_id,
+            individualIdType=id_type,
+            transactionID=transaction_id,
+            requestTime=timestamp_str,
             ## BaseAuthRequestDto
-            specVersion = self.ida_auth_version,
-            thumbprint = self.crypto_util.enc_cert_thumbprint,
-            domainUri = self.auth_domain_scheme,
-            env = self.ida_auth_env,
+            specVersion=self.ida_auth_version,
+            thumbprint=self.crypto_util.enc_cert_thumbprint,
+            domainUri=self.auth_domain_scheme,
+            env=self.ida_auth_env,
             ## AuthRequestDto
-            request = '',
-            consentObtained = consent_obtained,
-            requestHMAC = '',
-            requestSessionKey = '',
-            metadata = {},
+            request="",
+            consentObtained=consent_obtained,
+            requestHMAC="",
+            requestSessionKey="",
+            metadata={},
         )
 
-
-
     def _authenticate(
-            self,
-            *,
-            controller: AuthController,
-            individual_id: str,
-            demographic_data: DemographicsModel,
-            otp_value: Optional[str]='',
-            biometrics: Optional[List[BiometricModel]]=[],
-            consent_obtained=False,
-            individual_id_type=None,
+        self,
+        *,
+        controller: AuthController,
+        individual_id: str,
+        demographic_data: DemographicsModel,
+        otp_value: Optional[str] = "",
+        biometrics: Optional[List[BiometricModel]] = [],
+        consent_obtained=False,
+        individual_id_type=None,
     ):
-        '''
-        '''
-        self.logger.info('Received Auth Request for demographic.')
+        """ """
+        self.logger.info("Received Auth Request for demographic.")
         auth_request = self._get_default_auth_request(
             controller,
             individual_id=individual_id,
             consent_obtained=consent_obtained,
-            id_type = individual_id_type
+            id_type=individual_id_type,
         )
         # auth_request.requestedAuth.demo = True
         # auth_request.requestedAuth.otp = bool(otp_value)
         # auth_request.requestedAuth.bio = bool(biometrics)
         request = MOSIPEncryptAuthRequest(
-            timestamp = auth_request.requestTime,
-            biometrics = biometrics or [],
-            demographics = demographic_data,
-            otp = otp_value,
+            timestamp=auth_request.requestTime,
+            biometrics=biometrics or [],
+            demographics=demographic_data,
+            otp=otp_value,
         )
+
         try:
-            auth_request.request, auth_request.requestSessionKey, auth_request.requestHMAC = \
-                self.crypto_util.encrypt_auth_data(request.json(exclude_unset=True))
-            path_params = '/'.join(
-                map(
-                    urllib.parse.quote,
-                    (controller, self.partner_misp_lk, self.partner_id, self.partner_apikey)
-                )
+            (
+                auth_request.request,
+                auth_request.requestSessionKey,
+                auth_request.requestHMAC,
+            ) = self.crypto_util.encrypt_auth_data(request.json(exclude_unset=True))
+        except AuthenticatorCryptoException as exp:
+            self.logger.error(
+                "Failed to Encrypt Auth Data. Error Message: {}".format(exp)
             )
-            full_request_json = auth_request.json()
-            self.logger.debug(f"{full_request_json=}")
-            signature_header = {'Signature': self.crypto_util.sign_auth_request_data(full_request_json)}
-            response = self.auth_rest_util.post_request(path_params=path_params, data=full_request_json, additional_headers=signature_header)
-            self.logger.info('Auth Request for Demographic Completed.')
-            return response
-        except:
-            exp = traceback.format_exc()
-            self.logger.error('Error Processing Auth Request. Error Message: {}'.format(exp))
-            raise AuthenticatorException(Errors.AUT_BAS_001.name, Errors.AUT_BAS_001.value)
+            raise exp
+
+        path_params = "/".join(
+            map(
+                urllib.parse.quote,
+                (
+                    controller,
+                    self.partner_misp_lk,
+                    self.partner_id,
+                    self.partner_apikey,
+                ),
+            )
+        )
+        full_request_json = auth_request.json()
+        self.logger.debug(f"{full_request_json=}")
+        try:
+            signature_header = {
+                "Signature": self.crypto_util.sign_auth_request_data(full_request_json)
+            }
+        except AuthenticatorCryptoException as exp:
+            self.logger.error(
+                "Failed to Encrypt Auth Data. Error Message: {}".format(exp)
+            )
+            raise exp
+
+        response = self.auth_rest_util.post_request(
+            path_params=path_params,
+            data=full_request_json,
+            additional_headers=signature_header,
+        )
+        self.logger.info("Auth Request for Demographic Completed.")
+        return response

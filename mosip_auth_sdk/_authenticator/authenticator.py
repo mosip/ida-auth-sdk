@@ -126,6 +126,7 @@ class MOSIPAuthenticator:
         individual_id,
         individual_id_type,
         demographic_data: DemographicsModel,
+        txn_id: Optional[str] = '',
         otp_value: Optional[str] = "",
         biometrics: Optional[List[BiometricModel]] = [],
         consent=False,
@@ -138,11 +139,13 @@ class MOSIPAuthenticator:
             otp_value=otp_value,
             biometrics=biometrics,
             consent_obtained=consent,
+            txn_id=txn_id,
         )
 
     def kyc(
         self,
         *,
+        txn_id: Optional[str] = '',
         individual_id,
         individual_id_type,
         demographic_data: DemographicsModel,
@@ -158,6 +161,7 @@ class MOSIPAuthenticator:
             otp_value=otp_value,
             biometrics=biometrics,
             consent_obtained=consent,
+            txn_id=txn_id,
         )
 
     def decrypt_response(self, response_body):
@@ -240,7 +244,9 @@ class MOSIPAuthenticator:
         id_type="VID",
     ):
         baserequest = self._get_default_base_request(
-            controller, timestamp, txn_id,
+            controller,
+            timestamp,
+            txn_id,
             individual_id,
             id_type,
         )
@@ -286,6 +292,7 @@ class MOSIPAuthenticator:
         biometrics: Optional[List[BiometricModel]] = [],
         consent_obtained=False,
         individual_id_type=None,
+        txn_id='',
     ):
         """ """
         self.logger.info("Received Auth Request for demographic.")
@@ -294,6 +301,7 @@ class MOSIPAuthenticator:
             individual_id=individual_id,
             consent_obtained=consent_obtained,
             id_type=individual_id_type,
+            txn_id=txn_id,
         )
         # auth_request.requestedAuth.demo = True
         # auth_request.requestedAuth.otp = bool(otp_value)

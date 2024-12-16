@@ -13,7 +13,7 @@ response = authenticator.genotp(
     individual_id_type="VID",
     # can pass either one of these
     email=True,
-    otp=True,
+    phone=True,
 )
 response_body = response.json()
 errors = response_body.get("errors") or []

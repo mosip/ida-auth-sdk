@@ -65,7 +65,7 @@ class MOSIPAuthenticator:
             *,
             individual_id,
             individual_id_type,
-            txnId,
+            txn_id: Optional[str] = '',
             email: Optional[bool] = False,
             phone: Optional[bool] = False,
     ):
@@ -84,6 +84,7 @@ class MOSIPAuthenticator:
             'otp',
             individual_id=individual_id,
             id_type=individual_id_type,
+            txn_id=txn_id,
         )
         request.otpChannel = channels
 
@@ -194,7 +195,7 @@ class MOSIPAuthenticator:
 
     def _get_default_base_request(
             self,
-            controller
+            controller,
             timestamp,
             txn_id,
     ):
@@ -235,7 +236,7 @@ class MOSIPAuthenticator:
         consent_obtained=False,
         id_type="VID",
     ):
-        baserequest = self._get_default_auth_base_request(controller, timestamp, txn_id)
+        baserequest = self._get_default_base_request(controller, timestamp, txn_id)
         if controller == 'otp':
             return MOSIPOtpRequest(
                 id=baserequest.id,

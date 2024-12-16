@@ -41,7 +41,7 @@ class DemographicsModel(BaseModel):
 
 class MOSIPEncryptAuthRequest(BaseModel):
     biometrics: list
-    demographics: DemographicsModel
+    demographics: Optional[DemographicsModel]
     otp: str
     timestamp: str
 

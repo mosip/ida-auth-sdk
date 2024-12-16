@@ -198,6 +198,8 @@ class MOSIPAuthenticator:
             controller,
             timestamp,
             txn_id,
+            individual_id,
+            individual_id_type,
     ):
         _timestamp = timestamp or datetime.utcnow()
         timestamp_str = (
@@ -216,11 +218,12 @@ class MOSIPAuthenticator:
             )
             self.logger.error(f"No id found for {controller}")
             raise AuthenticatorException(Errors.AUT_CRY_005.name, err_msg)
-        return MOSIPAuthRequest(
+
+        return MOSIPBaseRequest(
             id=id,
             version=self.ida_auth_version,
             individualId=individual_id,
-            individualIdType=id_type,
+            individualIdType=individual_id_type,
             transactionID=transaction_id,
             requestTime=timestamp_str,
         )
@@ -236,7 +239,11 @@ class MOSIPAuthenticator:
         consent_obtained=False,
         id_type="VID",
     ):
-        baserequest = self._get_default_base_request(controller, timestamp, txn_id)
+        baserequest = self._get_default_base_request(
+            controller, timestamp, txn_id,
+            individual_id,
+            id_type,
+        )
         if controller == 'otp':
             return MOSIPOtpRequest(
                 id=baserequest.id,
@@ -245,6 +252,8 @@ class MOSIPAuthenticator:
             	individualIdType=baserequest.individualIdType,
             	transactionID=baserequest.transactionID,
             	requestTime=baserequest.requestTime,
+                otpChannel=[],
+                metadata={},
             )
         return MOSIPAuthRequest(
             ## base request

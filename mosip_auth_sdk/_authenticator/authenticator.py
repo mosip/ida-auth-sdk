@@ -10,6 +10,8 @@ from .auth_models import (
     DemographicsModel,
     MOSIPEncryptAuthRequest,
     BiometricModel,
+    MOSIPBaseRequest,
+    MOSIPOtpRequest,
 )
 from .utils import CryptoUtility, RestUtility
 from .exceptions import AuthenticatorException, Errors, AuthenticatorCryptoException
@@ -50,12 +52,72 @@ class MOSIPAuthenticator:
         self.ida_auth_request_id_by_controller: Dict[AuthController, str] = {
             "auth": config.mosip_auth.ida_auth_request_demo_id,
             "kyc": config.mosip_auth.ida_auth_request_kyc_id,
+            "otp": config.mosip_auth.ida_auth_request_otp_id,
         }
         self.ida_auth_env = config.mosip_auth.ida_auth_env
         self.timestamp_format = config.mosip_auth.timestamp_format
         self.authorization_header_constant = (
             config.mosip_auth.authorization_header_constant
         )
+
+    def genotp(
+            self,
+            *,
+            individual_id,
+            individual_id_type,
+            txnId,
+            email: Optional[bool] = False,
+            phone: Optional[bool] = False,
+    ):
+        channels = [
+            channel
+            for (channel, val) in
+            (('email', email), ('phone', phone))
+            if val
+        ]
+        if not channels:
+            err_msg = Errors.AUT_OTP_001.value
+            self.logger.error(err_msg)
+            raise AuthenticatorException(Errors.AUT_OTP_001.name, err_msg)
+
+        request = self._get_default_auth_request(
+            'otp',
+            individual_id=individual_id,
+            id_type=individual_id_type,
+        )
+        request.otpChannel = channels
+
+        path_params = "/".join(
+            map(
+                urllib.parse.quote,
+                (
+                    'otp',
+                    self.partner_misp_lk,
+                    self.partner_id,
+                    self.partner_apikey,
+                ),
+            )
+        )
+        full_request_json = request.json()
+        self.logger.debug(f"{full_request_json=}")
+        try:
+            signature_header = {
+                "Signature": self.crypto_util.sign_auth_request_data(full_request_json)
+            }
+        except AuthenticatorCryptoException as exp:
+            self.logger.error(
+                "Failed to Encrypt Auth Data. Error Message: {}".format(exp)
+            )
+            raise exp
+
+        self.logger.debug(f'Posting to {path_params}')
+        response = self.auth_rest_util.post_request(
+            path_params=path_params,
+            data=full_request_json,
+            additional_headers=signature_header,
+        )
+        self.logger.info("Auth Request for Demographic Completed.")
+        return response
 
     def auth(
         self,
@@ -130,15 +192,11 @@ class MOSIPAuthenticator:
         logger.addHandler(fileHandler)
         return logger
 
-    def _get_default_auth_request(
-        self,
-        controller: AuthController,
-        *,
-        timestamp=None,
-        individual_id="",
-        txn_id="",
-        consent_obtained=False,
-        id_type="VID",
+    def _get_default_base_request(
+            self,
+            controller
+            timestamp,
+            txn_id,
     ):
         _timestamp = timestamp or datetime.utcnow()
         timestamp_str = (
@@ -155,7 +213,7 @@ class MOSIPAuthenticator:
                 repr(controller),
                 " | ".join(self.ida_auth_request_id_by_controller.keys()),
             )
-            self.logger.error("Received Auth Request for demographic.")
+            self.logger.error(f"No id found for {controller}")
             raise AuthenticatorException(Errors.AUT_CRY_005.name, err_msg)
         return MOSIPAuthRequest(
             id=id,
@@ -164,6 +222,37 @@ class MOSIPAuthenticator:
             individualIdType=id_type,
             transactionID=transaction_id,
             requestTime=timestamp_str,
+        )
+
+
+    def _get_default_auth_request(
+        self,
+        controller: AuthController,
+        *,
+        timestamp=None,
+        individual_id="",
+        txn_id="",
+        consent_obtained=False,
+        id_type="VID",
+    ):
+        baserequest = self._get_default_auth_base_request(controller, timestamp, txn_id)
+        if controller == 'otp':
+            return MOSIPOtpRequest(
+                id=baserequest.id,
+            	version=baserequest.version,
+            	individualId=baserequest.individualId,
+            	individualIdType=baserequest.individualIdType,
+            	transactionID=baserequest.transactionID,
+            	requestTime=baserequest.requestTime,
+            )
+        return MOSIPAuthRequest(
+            ## base request
+            id=baserequest.id,
+            version=baserequest.version,
+            individualId=baserequest.individualId,
+            individualIdType=baserequest.individualIdType,
+            transactionID=baserequest.transactionID,
+            requestTime=baserequest.requestTime,
             ## BaseAuthRequestDto
             specVersion=self.ida_auth_version,
             thumbprint=self.crypto_util.enc_cert_thumbprint,

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Literal
 
 
 class MOSIPRequestedAuth(BaseModel):
@@ -45,6 +45,17 @@ class MOSIPEncryptAuthRequest(BaseModel):
     otp: str
     timestamp: str
 
+
+class MOSIPBaseRequest(BaseModel):
+    id: str
+    version: str
+    individualId: str
+    individualIdType: str
+    transactionID: str
+    requestTime: str
+class MOSIPOtpRequest(MOSIPBaseRequest):
+    otpChannel:  List[Literal['phone', 'email']]
+    metadata: dict
 
 class MOSIPAuthRequest(BaseModel):
     id: str

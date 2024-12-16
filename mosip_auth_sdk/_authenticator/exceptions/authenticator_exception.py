@@ -25,3 +25,5 @@ class Errors(Enum):
     AUT_CRY_005 = "Controller Method Not Found For Method {}. Supported Methods are {}"
 
     AUT_BAS_001 = "Not Able to process auth request."
+
+    AUT_OTP_001 = "No channels found. Please Pass otp=True or phone=True"

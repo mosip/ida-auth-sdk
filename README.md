@@ -39,9 +39,9 @@ auth(individual_id: str, individual_id_type: str, demographic_data: Demographics
 ## Installation
 
 ```bash
-pip install mosip_auth_sdk
+pip install git+https://github.com/mosip/ida-auth-sdk.git@release-x.y.z
 ```
-
+x.y.z should be refered to actual release version number.
 ## Usage
 
 ```python
@@ -84,6 +84,8 @@ else:
 
 ## Development Setup
 
+To be used for development purpose only.
+
 ### Prerequisites
 - Python 3 (tested on 3.10.7)
 - Poetry (recommended, optional)
@@ -116,7 +118,7 @@ python3 -m poetry publish
 
 ## Testing
 
-Example code is available in the `examples` folder. To test:
+Example code and config are available in the `examples` folder. To test:
 
 ```bash
 python examples/main.py

@@ -21,6 +21,8 @@ def _b64pad(s):
 class CryptoUtility:
     ## TODO: replace encrypt_config in toml with better schema
     def __init__(self, encrypt_config, sign_config, logger, **kwargs):
+        self.cert_encoding = sign_config.CERT_ENCODING.upper()
+
         if not logger:
             self.logger = logging.getLogger(__name__)
         else:
@@ -233,6 +235,35 @@ class CryptoUtility:
         self.logger.info("Request for Sign Auth Request Data.")
         try:
             jws_object = jws.JWS(auth_request_data.encode("UTF-8"))
+            self.logger.info(f"Certificate Encoding Type : {self.cert_encoding}")
+
+            if self.cert_encoding == "PEM":
+                cert_bytes = self.sign_cert.public_bytes(
+                    encoding=serialization.Encoding.PEM
+                )
+
+                x5c_value = cert_bytes.decode("UTF-8")
+
+                kid_value = base64.b64encode(
+                self.sign_cert.fingerprint(hashes.SHA256())
+                ).decode("UTF-8")
+
+            elif self.cert_encoding == "DER":
+                cert_bytes = self.sign_cert.public_bytes(
+                    encoding=serialization.Encoding.DER
+                )
+
+                x5c_value = base64.b64encode(
+                cert_bytes
+                ).decode("UTF-8")
+
+                kid_value = base64.b64encode(
+                self.sign_cert.fingerprint(hashes.SHA256())
+                ).decode("UTF-8")
+                
+            else:
+                raise ValueError(f"Unsupported CERT_ENCODING: {self.cert_encoding}")
+
             jws_object.add_signature(
                 self.sign_priv_key_jws,
                 None,
@@ -240,19 +271,13 @@ class CryptoUtility:
                     {
                         "alg": self.algorithm,
                         "x5c": [
-                            base64.encodebytes(
-                                self.sign_cert.public_bytes(
-                                    encoding=serialization.Encoding.PEM
-                                )
-                            ).decode("UTF-8")
+							x5c_value
                         ],
                     }
                 ),  # Protected header attributes, is IDA checking for protected attributes?
                 json.dumps(
                     {
-                        "kid": base64.encodebytes(
-                            self.sign_cert.fingerprint(hashes.SHA256())
-                        ).decode("UTF-8")
+                        "kid": kid_value
                     }
                 ),  # UnProtected Header attributes.
             )

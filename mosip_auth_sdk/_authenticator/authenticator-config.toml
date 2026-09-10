@@ -29,6 +29,7 @@ decrypt_p12_file_password = ""
 algorithm = 'RS256'
 sign_p12_file_path =  ''
 sign_p12_file_password = ''
+CERT_ENCODING = "DER"
 
 [logging]
 log_file_path = '/tmp/authenticator.log'
